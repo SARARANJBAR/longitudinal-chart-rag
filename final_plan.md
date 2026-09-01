@@ -14,7 +14,7 @@ Synthea patients · CMS122 (HbA1c control) · SageMaker batch embedding · Claud
 
 ---
 
-## The retrieval problem (unchanged from draft — it's the right one)
+## The retrieval problem
 
 Pulling one lab value from one note isn't retrieval; the note fits in context.
 Retrieval earns its place over a **longitudinal record**: Synthea emits years of
@@ -25,19 +25,19 @@ both retrieval labels and the final answer.
 
 ---
 
-## What changed after review, and why
+## Design decisions from review
 
-| Reviewer concern | Change |
+| Concern raised | Change |
 |---|---|
-| "Are you paying to keep a live embedding endpoint running?" (#1, #3, #11) | **No live endpoint.** Embedding is a one-time job → SageMaker **Processing Job** (transient, batch), terminates on completion. |
-| "Use a transient batch workflow to show SageMaker" (#2, #8, #15) | Adopted as the core SageMaker artifact. |
-| "BGE-M3 is overkill; use bge-small / MiniLM on CPU" (#7, #13) | Switched to `BAAI/bge-small-en-v1.5` on `ml.m5.xlarge` (CPU). |
-| "FAISS vs Chroma? flat file? S3? parquet?" (#6) | FAISS flat file + parquet metadata sidecar, both written to S3 by the job. |
+| "Are you paying to keep a live embedding endpoint running?" | **No live endpoint.** Embedding is a one-time job → SageMaker **Processing Job** (transient, batch), terminates on completion. |
+| "Use a transient batch workflow to show SageMaker" | Adopted as the core SageMaker artifact. |
+| "BGE-M3 is overkill; use bge-small / MiniLM on CPU" | Switched to `BAAI/bge-small-en-v1.5` on `ml.m5.xlarge` (CPU). |
+| "FAISS vs Chroma? flat file? S3? parquet?" | FAISS flat file + parquet metadata sidecar, both written to S3 by the job. |
 | Stage 02 FHIR-traversal overrun risk | **Resolved** — use Synthea's **CSV export**, not FHIR. Notes are assembled per-encounter from `encounters.csv` + `observations.csv` + `conditions.csv` + `medications.csv`, so every note carries its real `encounter_id` and gold labels are a CSV filter, not a resource walk. |
-| "Why pay Bedrock tokens when you have Claude Pro?" (#9, #11, #17) | Claude Pro is a chat UI with **no API access**. Programmatic generation needs Bedrock (or paid API). Bedrock Haiku for the full eval ≈ $2–3, within budget, and it demonstrates Bedrock. Kept. |
-| "Streamlit instead of cloud?" (#11) | Skipped. One notebook cell / screenshot covers the demo; a UI adds hours and zero MLOps signal. |
-| "Deploy a reranker endpoint, run eval, delete it" (#4) | Kept as an **optional** stretch ablation (real-time deploy → invoke → teardown lifecycle). |
-| Proposed name (#10) | Rejected — buzzword-heavy. Kept short title. |
+| "Why pay Bedrock tokens when you have Claude Pro?" | Claude Pro is a chat UI with **no API access**. Programmatic generation needs Bedrock (or paid API). Bedrock Haiku for the full eval ≈ $2–3, within budget, and it demonstrates Bedrock. Kept. |
+| "Streamlit instead of cloud?" | Skipped. One notebook cell / screenshot covers the demo; a UI adds hours and zero MLOps signal. |
+| "Deploy a reranker endpoint, run eval, delete it" | Kept as an **optional** stretch ablation (real-time deploy → invoke → teardown lifecycle). |
+| Project name | Kept short; rejected a longer buzzword-heavy alternative. |
 
 ---
 
@@ -60,7 +60,7 @@ Only managed step is **2** (transient) and the **4** API call. Everything else i
 
 | Decision | Choice | Justification |
 |---|---|---|
-| SageMaker role | **Processing Job** — pull corpus + query set from S3, chunk, embed, write `index.faiss` + `chunks.parquet` back to S3, terminate | One-time embedding has no reason to be a 24/7 endpoint. Batch job = the honest MLOps pattern: containerized, S3 in/out, driven from the SDK, no idle cost. Directly answers reviewers #1–3, #8, #15. |
+| SageMaker role | **Processing Job** — pull corpus + query set from S3, chunk, embed, write `index.faiss` + `chunks.parquet` back to S3, terminate | One-time embedding has no reason to be a 24/7 endpoint. Batch job = the honest MLOps pattern: containerized, S3 in/out, driven from the SDK, no idle cost. |
 | Real-time endpoint | **Optional stretch** — deploy bge-small as a JumpStart real-time endpoint, serve query embeddings live during one eval run, delete in the same session | Shows deploy/invoke/teardown lifecycle for the résumé. Cut if it costs >1.5h or risks budget. |
 | Embedding model | `BAAI/bge-small-en-v1.5` (384-dim) on `ml.m5.xlarge` (CPU) | Fast on CPU, ample for ~6k short clinical passages. BGE-M3 buys nothing here and needs a bigger instance. |
 | Vector store | FAISS `IndexFlatIP`, single file; chunk text + metadata (patient_id, encounter_date, type) in a parquet sidecar; both in S3 | 6k vectors → exact flat search is instant; no need for IVF/HNSW. Parquet is the natural metadata format and enables the date-filter ablation. |

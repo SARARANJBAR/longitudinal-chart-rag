@@ -9,13 +9,16 @@ SM_EXECUTION_ROLE = os.environ.get("SM_EXECUTION_ROLE", "")  # SageMaker exec ro
 
 # --- Models ---
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"          # 384-dim, CPU-friendly
-EMBED_INSTANCE = "ml.m5.xlarge"                  # CPU, for the Processing Job
+EMBED_INSTANCE = "ml.t3.medium"                  # CPU, for the Processing Job
 BEDROCK_MODEL = "anthropic.claude-haiku-4-5"     # generation
 
 # --- Retrieval ---
 TOP_K = 5
 RECALL_KS = (1, 3, 5)
-CHUNK_STRATEGY = "encounter"                     # "encounter" | "fixed512"
+CHUNK_STRATEGY = "section"                       # "section" (split >MAX on headers) | "fixed512"
+MAX_CHUNK_TOKENS = 512                           # bge-small max sequence length
+QUERY_PREFIX = "Represent this sentence for searching relevant passages: "  # bge-small retrieval
+INDEX_SOURCE = os.environ.get("RAG_INDEX_SOURCE", "local")  # "local" | "s3"
 
 # --- Cohort / eval ---
 N_PATIENTS_TARGET = 30

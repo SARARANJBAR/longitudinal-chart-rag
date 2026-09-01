@@ -20,10 +20,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-import pandas as pd  # noqa: E402
+import pandas as pd
 
-import config as cfg  # noqa: E402
-from synthea_io import load, run_synthea  # noqa: E402
+import config as cfg
+from synthea_io import load, run_synthea
 
 CORPUS = ROOT / cfg.DATA_DIR / "corpus"
 

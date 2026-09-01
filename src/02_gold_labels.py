@@ -5,7 +5,7 @@ One query per (cohort patient, measurement year) where:
   - at least one HbA1c (LOINC 4548-4) was recorded that year.
 
 For each query:
-  - answer_value:   the most recent HbA1c value that year (primary scored target)
+  - hba1c_value:   the most recent HbA1c value that year (primary scored target)
   - control_flag:   value <= 9.0 -> "controlled" / "not controlled" (secondary,
                     reported only — see note below)
   - gold_chunk_ids: encounter_id(s) of that most-recent HbA1c observation
@@ -13,10 +13,10 @@ For each query:
 Years with no HbA1c are skipped: CMS122 would score them "poor control", but there
 is no gold chunk to retrieve, so they don't belong in a retrieval eval.
 
-NOTE (data finding, decision approved): Synthea's synthetic diabetics are almost
-all well-controlled (A1c never > 9% in this cohort), so the binary CMS122 label is
-degenerate. The primary answer metric is value extraction ("what was the most
-recent A1c that year?"); the control flag is kept as a reported secondary only.
+Note, since Synthea's synthetic diabetics are almost all well-controlled (A1c never > 9%
+in this cohort), the binary CMS122 label is degenerate. The primary answer metric
+is value extraction ("what was the most recent A1c that year?"); the control flag is
+kept as a reported secondary only.
 
 Output: data/eval_set.jsonl
 """
@@ -80,7 +80,6 @@ def main() -> None:
                     f"during the {year} measurement period?"
                 ),
                 # primary answer target: value extraction
-                "answer_value": value,
                 "hba1c_value": value,
                 "hba1c_date": last_date.strftime("%Y-%m-%d"),
                 # secondary (reported, not scored — label is imbalanced): CMS122 flag
@@ -95,7 +94,7 @@ def main() -> None:
 
     n = len(rows)
     ctrl = sum(r["control_flag"] == "controlled" for r in rows)
-    vals = [r["answer_value"] for r in rows]
+    vals = [r["hba1c_value"] for r in rows]
     print(f"[done] {n} queries across {len(roster)} patients -> {out}")
     print(f"       answer_value (A1c %): min {min(vals)}  max {max(vals)}  "
           f"distinct {len(set(vals))}")
