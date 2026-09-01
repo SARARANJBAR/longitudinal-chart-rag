@@ -5,17 +5,18 @@ One query per (cohort patient, measurement year) where:
   - at least one HbA1c (LOINC 4548-4) was recorded that year.
 
 For each query:
-  - answer:        most recent HbA1c that year <= 9.0  ->  "controlled" / "not controlled"
+  - answer_value:   the most recent HbA1c value that year (primary scored target)
+  - control_flag:   value <= 9.0 -> "controlled" / "not controlled" (secondary,
+                    reported only — see note below)
   - gold_chunk_ids: encounter_id(s) of that most-recent HbA1c observation
 
 Years with no HbA1c are skipped: CMS122 would score them "poor control", but there
 is no gold chunk to retrieve, so they don't belong in a retrieval eval.
 
-NOTE (data finding): Synthea's synthetic diabetics are almost all well-controlled
-(A1c rarely > 8%), so the binary controlled/not-controlled label has little
-variance. Each query therefore also carries `hba1c_value` / `hba1c_date` so the
-eval can score value extraction ("what was the most recent A1c that year?"),
-which has real signal and still requires retrieving the right encounter.
+NOTE (data finding, decision approved): Synthea's synthetic diabetics are almost
+all well-controlled (A1c never > 9% in this cohort), so the binary CMS122 label is
+degenerate. The primary answer metric is value extraction ("what was the most
+recent A1c that year?"); the control flag is kept as a reported secondary only.
 
 Output: data/eval_set.jsonl
 """
@@ -75,12 +76,15 @@ def main() -> None:
                 "patient_name": p["name"],
                 "year": int(year),
                 "question": (
-                    f"Was {p['name']}'s hemoglobin A1c controlled "
-                    f"(≤ {cfg.HBA1C_CONTROL_THRESHOLD:.0f}%) during the {year} measurement period?"
+                    f"What was {p['name']}'s most recent hemoglobin A1c result "
+                    f"during the {year} measurement period?"
                 ),
-                "answer": "controlled" if controlled else "not controlled",
+                # primary answer target: value extraction
+                "answer_value": value,
                 "hba1c_value": value,
                 "hba1c_date": last_date.strftime("%Y-%m-%d"),
+                # secondary (reported, not scored — label is imbalanced): CMS122 flag
+                "control_flag": "controlled" if controlled else "not controlled",
                 "gold_chunk_ids": sorted(latest.ENCOUNTER.unique().tolist()),
             })
 
@@ -90,14 +94,14 @@ def main() -> None:
             f.write(json.dumps(r) + "\n")
 
     n = len(rows)
-    ctrl = sum(r["answer"] == "controlled" for r in rows)
+    ctrl = sum(r["control_flag"] == "controlled" for r in rows)
+    vals = [r["answer_value"] for r in rows]
     print(f"[done] {n} queries across {len(roster)} patients -> {out}")
-    print(f"       controlled: {ctrl}  |  not controlled: {n - ctrl}")
+    print(f"       answer_value (A1c %): min {min(vals)}  max {max(vals)}  "
+          f"distinct {len(set(vals))}")
+    print(f"       secondary control_flag — controlled: {ctrl} | not: {n - ctrl}")
     print(f"       gold chunks per query: "
           f"{sum(len(r['gold_chunk_ids']) for r in rows) / n:.2f} avg")
-    if n and min(ctrl, n - ctrl) / n < 0.15:
-        print("       WARNING: control label is heavily imbalanced — "
-              "prefer value-extraction scoring (hba1c_value) for the answer eval.")
 
 
 if __name__ == "__main__":

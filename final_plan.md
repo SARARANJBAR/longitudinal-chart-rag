@@ -77,16 +77,22 @@ Only managed step is **2** (transient) and the **4** API call. Everything else i
 
 ## Eval design
 
-**Query set (~100):** for each cohort patient, one *"was HbA1c controlled during
-measurement period Y?"* per year they sit in the CMS122 denominator. This is the
-unit every ablation delta is measured over.
+**Query set (137):** for each cohort patient, one *"what was the most recent HbA1c
+during measurement period Y?"* per year they have an HbA1c and sit in the CMS122
+denominator (age 18–75, alive, a visit that year). This is the unit every ablation
+delta is measured over. Actuals from Stage 01/02: 20 patients, 2,412 encounter
+notes, 137 queries, 1.0 gold chunk each.
 
 **Gold labels (from the CSV export):**
-- *Answer truth* — CMS122 numerator logic (most recent HbA1c in the period ≤ 9%).
-- *Gold chunks* — the encounter(s) containing the qualifying HbA1c observation.
+- *Answer truth* — the most recent HbA1c value in the period (30 distinct values
+  across the 137 queries).
+- *Gold chunks* — the encounter(s) containing that HbA1c observation.
 
-**Metrics:** retrieval `recall@{1,3,5}`; end-to-end answer accuracy (exact
-controlled/not-controlled match) with citation correctness as a secondary check.
+**Metrics:** retrieval `recall@{1,3,5}`; end-to-end answer accuracy = generated
+value within ±0.1% of truth; citation correctness (cited chunk ∈ gold) as a
+secondary check. The CMS122 controlled/not-controlled flag is **reported but not
+scored** — Synthea's synthetic diabetics are all controlled (A1c ≤ 7.6%), so the
+binary label has no variance.
 
 | Ablation | Question it answers | Status |
 |---|---|---|
