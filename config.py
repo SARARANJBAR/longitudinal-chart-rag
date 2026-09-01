@@ -19,8 +19,14 @@ CHUNK_STRATEGY = "encounter"                     # "encounter" | "fixed512"
 
 # --- Cohort / eval ---
 N_PATIENTS_TARGET = 30
-SYNTHEA_OVERGEN = 200
+SYNTHEA_OVERGEN = 300
+SYNTHEA_STATE = "Massachusetts"
+SYNTHEA_SEED = 42
 MEASURE = "CMS122"                               # HbA1c poor control (>9%)
+DIABETES_SNOMED = "44054006"                     # Diabetes mellitus type 2
+HBA1C_LOINC = "4548-4"                           # Hemoglobin A1c
+HBA1C_CONTROL_THRESHOLD = 9.0                    # <= 9% == controlled
+MIN_HBA1C_YEARS = 2                              # years in the denominator to keep a patient
 
 # --- Local paths (gitignored) ---
 DATA_DIR = os.environ.get("RAG_DATA_DIR", "data")

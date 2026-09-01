@@ -21,3 +21,7 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# logs / venv
+*.log
+.venv/
