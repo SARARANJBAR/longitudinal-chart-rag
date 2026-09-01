@@ -1,0 +1,16 @@
+# AWS
+boto3>=1.34
+sagemaker>=2.220
+anthropic[bedrock]>=0.39
+
+# retrieval / embedding (local dev + inside the processing job)
+sentence-transformers>=3.0
+faiss-cpu>=1.8
+rank-bm25>=0.2.2
+
+# data
+pandas>=2.2
+pyarrow>=16.0
+
+# notebook demo
+jupyter

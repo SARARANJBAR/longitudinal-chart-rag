@@ -1,0 +1,23 @@
+# data & artifacts
+data/
+artifacts/
+*.faiss
+*.parquet
+synthea/
+output/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# aws / secrets
+.env
+*.pem
+
+# os / editor
+.DS_Store
+.vscode/
+.idea/
