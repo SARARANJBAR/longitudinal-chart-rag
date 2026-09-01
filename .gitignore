@@ -25,3 +25,6 @@ venv/
 # logs / venv
 *.log
 .venv/
+
+# internal tracking, not outward-facing
+TODO.md
