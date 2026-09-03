@@ -28,3 +28,4 @@ venv/
 
 # internal tracking, not outward-facing
 TODO.md
+*.rtf
