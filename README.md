@@ -39,5 +39,8 @@ a SageMaker execution role, and Java (for Synthea).
 
 ## Status
 
-Scaffolding. Build order follows `src/` numbering; see `final_plan.md` for the hour
-estimate and fallbacks.
+Stages 01–04 done locally (20-patient corpus, 137-query eval set, FAISS index, retrieval
+w/ dense·hybrid·date_filtered). AWS provisioned; S3-contract proven with a hand-uploaded
+index. SageMaker Processing Job (Stage 03 cloud path) is mid-validation — see `TODO.md`
+for current attempt status. Stages 05–08 (Bedrock generation, eval harness, ablations,
+docs) not started. See `final_plan.md` for the hour estimate and fallbacks.
