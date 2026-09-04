@@ -25,6 +25,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
+# In the SageMaker container, source_dir is flattened so embed.py sits at the code
+# root with config.py/config.yaml copied alongside it (see 03_embed_job.py) rather
+# than three levels up as in the local src/processing/ layout.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import config as cfg  # noqa: E402
 

@@ -1,6 +1,6 @@
 # AWS
 boto3>=1.34
-sagemaker>=2.220
+sagemaker>=3.0   # v3 restructured package (sagemaker.core.processing etc.) — see 03_embed_job.py
 anthropic[bedrock]>=0.39
 
 # retrieval / embedding (local dev + inside the processing job)
